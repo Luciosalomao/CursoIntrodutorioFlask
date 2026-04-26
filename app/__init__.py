@@ -5,6 +5,7 @@ from app.config import Config
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_login import LoginManager
+from flask_swagger_ui import get_swaggerui_blueprint
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -33,6 +34,16 @@ def create_app():
     login_manager.login_message = None
     login_manager.login_message_category = 'info'
 
+    SWAGGER_URL = '/swagger'
+    API_URL = '/static/swagger.json'
+
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={'app_name': "API"}
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
     from app.models import Produto, Usuario
 
     from app.main import main_bp
@@ -42,5 +53,7 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(produtos_bp, url_prefix='/produtos')
     app.register_blueprint(usuarios_bp, url_prefix='/usuarios')
+
+
 
     return app
