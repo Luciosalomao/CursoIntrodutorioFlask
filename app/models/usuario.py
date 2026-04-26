@@ -1,10 +1,14 @@
-from app import db
+from app import db, login_manager
 from dataclasses import dataclass, field
 from flask_bcrypt import generate_password_hash, check_password_hash
+from flask_login import UserMixin  # Importa UserMixin
 
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 @dataclass
-class Usuario(db.Model):
+class Usuario(db.Model, UserMixin):  # Herda UserMixin
     __tablename__ = 'usuarios'
 
     id: int

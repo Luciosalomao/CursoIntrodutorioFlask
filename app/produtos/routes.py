@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models.produto import Produto
+from flask_login import login_required, current_user
 
 produtos_bp = Blueprint('produtos', __name__)
 
@@ -26,6 +27,7 @@ def buscar_produto(id):
 
 
 @produtos_bp.route('/', methods=['POST'])
+@login_required
 def criar_produto():
     dados = request.json
     produto = Produto(
@@ -39,6 +41,7 @@ def criar_produto():
 
 
 @produtos_bp.route('/<int:id>', methods=['PUT'])
+@login_required
 def atualizar_produto(id):
     dados = request.json
 
@@ -67,6 +70,7 @@ def atualizar_produto(id):
 
 
 @produtos_bp.route('/<int:id>', methods=['DELETE'])
+@login_required
 def deletar_produto(id):
     produto = Produto.query.get(id)
 
