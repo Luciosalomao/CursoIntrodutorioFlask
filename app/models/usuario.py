@@ -1,14 +1,14 @@
 from app import db, login_manager
 from dataclasses import dataclass, field
 from flask_bcrypt import generate_password_hash, check_password_hash
-from flask_login import UserMixin  # Importa UserMixin
+from flask_login import UserMixin
 
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
 @dataclass
-class Usuario(db.Model, UserMixin):  # Herda UserMixin
+class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuarios'
 
     id: int
@@ -20,6 +20,7 @@ class Usuario(db.Model, UserMixin):  # Herda UserMixin
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
+    carrinho = db.relationship('ItemCarrinho', backref='usuario', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Usuario {self.nome}>'

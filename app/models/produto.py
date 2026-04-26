@@ -14,6 +14,7 @@ class Produto(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     preco = db.Column(db.Float, nullable=False)
     descricao = db.Column(db.Text, nullable=True)
+    carrinho = db.relationship('ItemCarrinho', backref='produto', lazy=True)
 
     def __repr__(self):
         return f'<Produto {self.nome}>'
