@@ -18,9 +18,9 @@ def create_app():
 
     from app.models import Produto, Usuario
 
-    from app.main.routes import main_bp
-    from app.produtos.routes import produtos_bp
-    from app.usuarios.routes import usuarios_bp
+    from app.main import main_bp
+    from app.produtos import produtos_bp
+    from app.usuarios import usuarios_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(produtos_bp, url_prefix='/produtos')
