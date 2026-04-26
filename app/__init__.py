@@ -3,10 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from app.config import Config
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
+cors = CORS()
 
 def create_app():
     app = Flask(__name__)
@@ -15,6 +17,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
+    cors.init_app(app)
 
     from app.models import Produto, Usuario
 
