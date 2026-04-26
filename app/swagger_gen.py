@@ -8,7 +8,11 @@ ENDPOINTS = {
         },
         "post": {
             "summary": "Cria um novo produto",
-            "responses": {"201": {"description": "Produto criado"}}
+            "security": [{"sessionAuth": []}],
+            "responses": {
+                "201": {"description": "Produto criado"},
+                "401": {"description": "Nao autorizado - faca login primeiro"}
+            }
         }
     },
     "/produtos/{id}": {
@@ -18,11 +22,19 @@ ENDPOINTS = {
         },
         "put": {
             "summary": "Atualiza um produto",
-            "responses": {"200": {"description": "Produto atualizado"}}
+            "security": [{"sessionAuth": []}],
+            "responses": {
+                "200": {"description": "Produto atualizado"},
+                "401": {"description": "Nao autorizado"}
+            }
         },
         "delete": {
             "summary": "Deleta um produto",
-            "responses": {"204": {"description": "Produto deletado"}}
+            "security": [{"sessionAuth": []}],
+            "responses": {
+                "204": {"description": "Produto deletado"},
+                "401": {"description": "Nao autorizado"}
+            }
         }
     },
     "/usuarios": {
@@ -52,23 +64,49 @@ ENDPOINTS = {
     "/usuarios/login": {
         "post": {
             "summary": "Faz login do usuario",
-            "responses": {"200": {"description": "Login realizado"}}
+            "requestBody": {
+                "required": True,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "email": {"type": "string"},
+                                "senha": {"type": "string"},
+                                "remember": {"type": "boolean"}
+                            },
+                            "required": ["email", "senha"]
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {"description": "Login realizado"},
+                "401": {"description": "Credenciais invalidas"}
+            }
         }
     },
     "/usuarios/logout": {
         "post": {
             "summary": "Faz logout do usuario",
-            "responses": {"200": {"description": "Logout realizado"}}
+            "security": [{"sessionAuth": []}],
+            "responses": {
+                "200": {"description": "Logout realizado"},
+                "401": {"description": "Nao autorizado"}
+            }
         }
     },
     "/usuarios/me": {
         "get": {
             "summary": "Retorna o usuario logado",
-            "responses": {"200": {"description": "Usuario logado"}}
+            "security": [{"sessionAuth": []}],
+            "responses": {
+                "200": {"description": "Usuario logado"},
+                "401": {"description": "Nao autorizado"}
+            }
         }
     }
 }
-
 
 def generate_swagger_json():
     swagger = {
@@ -80,6 +118,19 @@ def generate_swagger_json():
         "servers": [
             {"url": "http://localhost:5000", "description": "Servidor local"}
         ],
+        "components": {
+            "securitySchemes": {
+                "sessionAuth": {
+                    "type": "apiKey",
+                    "in": "cookie",
+                    "name": "session",
+                    "description": "Faca login em /usuarios/login primeiro. O cookie sera enviado automaticamente."
+                }
+            }
+        },
+        "security": [
+            {"sessionAuth": []}
+        ],
         "paths": ENDPOINTS
     }
 
@@ -87,7 +138,6 @@ def generate_swagger_json():
         json.dump(swagger, f, indent=2, ensure_ascii=False)
 
     print("swagger.json gerado com sucesso!")
-
 
 if __name__ == "__main__":
     generate_swagger_json()

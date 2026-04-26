@@ -10,6 +10,21 @@
       "description": "Servidor local"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session",
+        "description": "Faca login em /usuarios/login primeiro. O cookie sera enviado automaticamente."
+      }
+    }
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
   "paths": {
     "/produtos": {
       "get": {
@@ -22,9 +37,17 @@
       },
       "post": {
         "summary": "Cria um novo produto",
+        "security": [
+          {
+            "sessionAuth": []
+          }
+        ],
         "responses": {
           "201": {
             "description": "Produto criado"
+          },
+          "401": {
+            "description": "Nao autorizado - faca login primeiro"
           }
         }
       }
@@ -40,17 +63,33 @@
       },
       "put": {
         "summary": "Atualiza um produto",
+        "security": [
+          {
+            "sessionAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Produto atualizado"
+          },
+          "401": {
+            "description": "Nao autorizado"
           }
         }
       },
       "delete": {
         "summary": "Deleta um produto",
+        "security": [
+          {
+            "sessionAuth": []
+          }
+        ],
         "responses": {
           "204": {
             "description": "Produto deletado"
+          },
+          "401": {
+            "description": "Nao autorizado"
           }
         }
       }
@@ -102,9 +141,37 @@
     "/usuarios/login": {
       "post": {
         "summary": "Faz login do usuario",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "senha": {
+                    "type": "string"
+                  },
+                  "remember": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "email",
+                  "senha"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Login realizado"
+          },
+          "401": {
+            "description": "Credenciais invalidas"
           }
         }
       }
@@ -112,9 +179,17 @@
     "/usuarios/logout": {
       "post": {
         "summary": "Faz logout do usuario",
+        "security": [
+          {
+            "sessionAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Logout realizado"
+          },
+          "401": {
+            "description": "Nao autorizado"
           }
         }
       }
@@ -122,9 +197,17 @@
     "/usuarios/me": {
       "get": {
         "summary": "Retorna o usuario logado",
+        "security": [
+          {
+            "sessionAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Usuario logado"
+          },
+          "401": {
+            "description": "Nao autorizado"
           }
         }
       }
