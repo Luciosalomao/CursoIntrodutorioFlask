@@ -1,6 +1,5 @@
 import os
 
-from flasgger import swag_from
 from flask import Blueprint, jsonify, request, session
 from app import db
 from app.models.usuario import Usuario
@@ -11,7 +10,6 @@ usuarios_bp = Blueprint('usuarios', __name__)
 DOCS_PATH = os.path.join(os.path.dirname(__file__), 'docs')
 
 @usuarios_bp.route('/')
-@swag_from(os.path.join(DOCS_PATH, 'listar_usuarios.yml'))
 @login_required
 def listar_usuarios():
 
@@ -20,7 +18,6 @@ def listar_usuarios():
 
 
 @usuarios_bp.route('/<int:id>')
-@swag_from(os.path.join(DOCS_PATH, 'buscar_usuario.yml'))
 @login_required
 def buscar_usuario(id):
 
@@ -38,7 +35,6 @@ def buscar_usuario(id):
 
 
 @usuarios_bp.route('/', methods=['POST'])
-@swag_from(os.path.join(DOCS_PATH, 'criar_usuario.yml'))
 def criar_usuario():
 
     dados = request.json
@@ -69,7 +65,6 @@ def criar_usuario():
 
 
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
-@swag_from(os.path.join(DOCS_PATH, 'atualizar_usuario.yml'))
 @login_required
 def atualizar_usuario(id):
 
@@ -111,7 +106,6 @@ def atualizar_usuario(id):
 
 
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
-@swag_from(os.path.join(DOCS_PATH, 'deletar_usuario.yml'))
 @login_required
 def deletar_usuario(id):
 
@@ -132,7 +126,6 @@ def deletar_usuario(id):
 
 
 @usuarios_bp.route('/login', methods=['POST'])
-@swag_from(os.path.join(DOCS_PATH, 'login.yml'))
 def login():
 
     dados = request.json
@@ -164,7 +157,6 @@ def login():
 
 
 @usuarios_bp.route('/logout', methods=['POST'])
-@swag_from(os.path.join(DOCS_PATH, 'logout.yml'))
 @login_required
 def logout():
     logout_user()
@@ -174,7 +166,6 @@ def logout():
 
 
 @usuarios_bp.route('/me', methods=['GET'])
-@swag_from(os.path.join(DOCS_PATH, 'usuario_atual.yml'))
 @login_required
 def usuario_atual():
 

@@ -1,6 +1,5 @@
 import os
 
-from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models.produto import Produto
@@ -11,7 +10,6 @@ produtos_bp = Blueprint('produtos', __name__)
 DOCS_PATH = os.path.join(os.path.dirname(__file__), 'docs')
 
 @produtos_bp.route('/')
-@swag_from(os.path.join(DOCS_PATH, 'listar_produtos.yml'))
 def listar_produtos():
 
     produtos = Produto.query.all()
@@ -19,7 +17,6 @@ def listar_produtos():
 
 
 @produtos_bp.route('/<int:id>')
-@swag_from(os.path.join(DOCS_PATH, 'buscar_produto.yml'))
 def buscar_produto(id):
 
     produto = Produto.query.get(id)
@@ -37,7 +34,6 @@ def buscar_produto(id):
 
 @produtos_bp.route('/', methods=['POST'])
 @login_required
-@swag_from(os.path.join(DOCS_PATH, 'criar_produto.yml'))
 def criar_produto():
 
     dados = request.json
@@ -66,7 +62,6 @@ def criar_produto():
 
 @produtos_bp.route('/<int:id>', methods=['PUT'])
 @login_required
-@swag_from(os.path.join(DOCS_PATH, 'atualizar_produto.yml'))
 def atualizar_produto(id):
 
     dados = request.json
@@ -96,7 +91,6 @@ def atualizar_produto(id):
 
 @produtos_bp.route('/<int:id>', methods=['DELETE'])
 @login_required
-@swag_from(os.path.join(DOCS_PATH, 'deletar_produto.yml'))
 def deletar_produto(id):
 
     produto = Produto.query.get(id)

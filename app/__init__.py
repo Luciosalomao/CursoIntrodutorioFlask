@@ -5,9 +5,6 @@ from app.config import Config
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_login import LoginManager
-from flasgger import Swagger
-from app.swagger_config import SWAGGER_CONFIG
-from app.middleware import force_json_content_type
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -18,14 +15,11 @@ cors = CORS()
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app = force_json_content_type(app)
-    app.config['SWAGGER'] = SWAGGER_CONFIG
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app)
     login_manager.init_app(app)
-    Swagger(app)
 
     @login_manager.unauthorized_handler
     def unauthorized():
