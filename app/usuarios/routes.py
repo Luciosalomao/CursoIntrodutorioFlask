@@ -24,7 +24,7 @@ def buscar_usuario(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "usuario",
             "requested_id": id
-        }), 422
+        }), 404
 
     return jsonify(usuario), 200
 
@@ -70,7 +70,7 @@ def atualizar_usuario(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "usuario",
             "requested_id": id
-        }), 422
+        }), 404
 
     if not dados.get('nome') and not dados.get('email') and not dados.get('senha'):
         return jsonify({
@@ -109,7 +109,7 @@ def deletar_usuario(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "usuario",
             "requested_id": id
-        }), 422
+        }), 404
 
     db.session.delete(usuario)
     db.session.commit()

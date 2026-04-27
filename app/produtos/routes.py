@@ -21,7 +21,7 @@ def buscar_produto(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "produto",
             "requested_id": id
-        }), 422
+        }), 404
 
     return jsonify(produto), 200
 
@@ -30,14 +30,27 @@ def buscar_produto(id):
 @login_required
 def criar_produto():
     dados = request.json
-    produto = Produto(
-        nome=dados['nome'],
-        preco=dados['preco'],
-        descricao=dados.get('descricao', '')
-    )
-    db.session.add(produto)
-    db.session.commit()
-    return jsonify(produto), 201
+
+    if not dados or 'nome' not in dados or 'preco' not in dados:
+        return jsonify({
+            "error": "unprocessable_entity",
+            "message": "Campos 'nome' e 'preco' são obrigatórios no corpo da requisição."
+        }), 422
+
+    try:
+        produto = Produto(
+            nome=dados['nome'],
+            preco=float(dados['preco']),
+            descricao=dados.get('descricao', '')
+        )
+        db.session.add(produto)
+        db.session.commit()
+        return jsonify(produto), 201
+    except (ValueError, TypeError):
+        return jsonify({
+            "error": "invalid_data_format",
+            "message": "O preço deve ser um número válido."
+        }), 422
 
 
 @produtos_bp.route('/<int:id>', methods=['PUT'])
@@ -53,7 +66,7 @@ def atualizar_produto(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "produto",
             "requested_id": id
-        }), 422
+        }), 404
 
     if not dados.get('nome') or not dados.get('preco'):
         return jsonify({
@@ -80,7 +93,7 @@ def deletar_produto(id):
             "message": f"Registro com ID {id} nao encontrado",
             "resource_type": "produto",
             "requested_id": id
-        }), 422
+        }), 404
 
     db.session.delete(produto)
     db.session.commit()
