@@ -1,3 +1,6 @@
+import os
+
+from flasgger import swag_from
 from flask import Blueprint, jsonify, request, session
 from app import db
 from app.models.usuario import Usuario
@@ -5,17 +8,22 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
+DOCS_PATH = os.path.join(os.path.dirname(__file__), 'docs')
 
 @usuarios_bp.route('/')
+@swag_from(os.path.join(DOCS_PATH, 'listar_usuarios.yml'))
 @login_required
 def listar_usuarios():
+
     usuarios = Usuario.query.all()
     return jsonify(usuarios)
 
 
 @usuarios_bp.route('/<int:id>')
+@swag_from(os.path.join(DOCS_PATH, 'buscar_usuario.yml'))
 @login_required
 def buscar_usuario(id):
+
     usuario = Usuario.query.get(id)
 
     if not usuario:
@@ -30,7 +38,9 @@ def buscar_usuario(id):
 
 
 @usuarios_bp.route('/', methods=['POST'])
+@swag_from(os.path.join(DOCS_PATH, 'criar_usuario.yml'))
 def criar_usuario():
+
     dados = request.json
 
     if not dados.get('nome') or not dados.get('email') or not dados.get('senha'):
@@ -59,8 +69,10 @@ def criar_usuario():
 
 
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
+@swag_from(os.path.join(DOCS_PATH, 'atualizar_usuario.yml'))
 @login_required
 def atualizar_usuario(id):
+
     dados = request.json
     usuario = Usuario.query.get(id)
 
@@ -99,8 +111,10 @@ def atualizar_usuario(id):
 
 
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
+@swag_from(os.path.join(DOCS_PATH, 'deletar_usuario.yml'))
 @login_required
 def deletar_usuario(id):
+
     usuario = Usuario.query.get(id)
 
     if not usuario:
@@ -118,7 +132,9 @@ def deletar_usuario(id):
 
 
 @usuarios_bp.route('/login', methods=['POST'])
+@swag_from(os.path.join(DOCS_PATH, 'login.yml'))
 def login():
+
     dados = request.json
 
     if not dados.get('email') or not dados.get('senha'):
@@ -148,6 +164,7 @@ def login():
 
 
 @usuarios_bp.route('/logout', methods=['POST'])
+@swag_from(os.path.join(DOCS_PATH, 'logout.yml'))
 @login_required
 def logout():
     logout_user()
@@ -157,8 +174,10 @@ def logout():
 
 
 @usuarios_bp.route('/me', methods=['GET'])
+@swag_from(os.path.join(DOCS_PATH, 'usuario_atual.yml'))
 @login_required
 def usuario_atual():
+
     return jsonify({
         "id": current_user.id,
         "nome": current_user.nome,

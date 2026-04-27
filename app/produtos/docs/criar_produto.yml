@@ -1,0 +1,67 @@
+Cria um novo produto no sistema. Requer autenticação.
+---
+tags:
+  - Produtos
+security:
+  - Bearer: []
+consumes:
+  - application/json
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - nome
+        - preco
+      properties:
+        nome:
+          type: string
+          example: "Notebook Dell"
+          description: Nome do produto
+        preco:
+          type: number
+          format: float
+          example: 2499.99
+          description: Preço do produto
+        descricao:
+          type: string
+          example: "Notebook Dell Inspiron i5"
+          description: Descrição detalhada (opcional)
+responses:
+  201:
+    description: Produto criado com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        preco:
+          type: number
+        descricao:
+          type: string
+  401:
+    description: Não autorizado - usuário não está logado
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "unauthorized"
+        message:
+          type: string
+          example: "Voce precisa estar logado para acessar este recurso"
+  422:
+    description: Dados inválidos ou incompletos
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "unprocessable_entity"
+        message:
+          type: string
+          example: "Campos 'nome' e 'preco' são obrigatórios"

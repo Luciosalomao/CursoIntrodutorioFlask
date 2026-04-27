@@ -1,0 +1,25 @@
+Lista todos os produtos cadastrados no sistema.
+---
+tags:
+  - Produtos
+responses:
+  200:
+    description: Lista de produtos retornada com sucesso
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 1
+          nome:
+            type: string
+            example: "Notebook Dell"
+          preco:
+            type: number
+            format: float
+            example: 2499.99
+          descricao:
+            type: string
+            example: "Notebook Dell Inspiron i5"

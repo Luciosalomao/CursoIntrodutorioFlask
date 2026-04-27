@@ -1,0 +1,46 @@
+Busca um usuário específico pelo ID. Requer autenticação.
+---
+tags:
+  - Usuários
+security:
+  - Bearer: []
+consumes:
+  - application/json
+parameters:
+  - name: id
+    in: path
+    type: integer
+    required: true
+    description: ID do usuário a ser buscado
+    example: 1
+responses:
+  200:
+    description: Usuário encontrado com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+  401:
+    description: Não autorizado
+  404:
+    description: Usuário não encontrado
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "record_not_found"
+        message:
+          type: string
+          example: "Registro com ID 99 nao encontrado"
+        resource_type:
+          type: string
+          example: "usuario"
+        requested_id:
+          type: integer
+          example: 99

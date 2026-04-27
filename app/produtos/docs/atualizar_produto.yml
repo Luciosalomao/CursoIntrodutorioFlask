@@ -1,0 +1,66 @@
+Atualiza um produto existente. Requer autenticação.
+---
+tags:
+  - Produtos
+security:
+  - Bearer: []
+consumes:
+  - application/json
+parameters:
+  - name: id
+    in: path
+    type: integer
+    required: true
+    description: ID do produto a ser atualizado
+    example: 1
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - nome
+        - preco
+      properties:
+        nome:
+          type: string
+          example: "Notebook Dell Atualizado"
+          description: Nome do produto
+        preco:
+          type: number
+          format: float
+          example: 2599.99
+          description: Preço do produto
+        descricao:
+          type: string
+          example: "Notebook Dell Inspiron i7"
+          description: Descrição detalhada (opcional)
+responses:
+  200:
+    description: Produto atualizado com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        preco:
+          type: number
+        descricao:
+          type: string
+  400:
+    description: Campos obrigatórios faltando
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "missing_fields"
+        message:
+          type: string
+          example: "nome e preco sao obrigatorios"
+  401:
+    description: Não autorizado
+  404:
+    description: Produto não encontrado

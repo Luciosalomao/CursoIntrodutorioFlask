@@ -5,7 +5,9 @@ from app.config import Config
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_login import LoginManager
-from flask_swagger_ui import get_swaggerui_blueprint
+from flasgger import Swagger
+from app.swagger_config import SWAGGER_CONFIG
+from app.middleware import force_json_content_type
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -16,12 +18,14 @@ cors = CORS()
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-
+    app = force_json_content_type(app)
+    app.config['SWAGGER'] = SWAGGER_CONFIG
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app)
     login_manager.init_app(app)
+    Swagger(app)
 
     @login_manager.unauthorized_handler
     def unauthorized():
@@ -34,16 +38,6 @@ def create_app():
     login_manager.login_message = None
     login_manager.login_message_category = 'info'
 
-    SWAGGER_URL = '/swagger'
-    API_URL = '/static/swagger.json'
-
-    swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={'app_name': "API"}
-    )
-    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
-
     from app.models import Produto, Usuario
 
     from app.main import main_bp
@@ -53,7 +47,5 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(produtos_bp, url_prefix='/produtos')
     app.register_blueprint(usuarios_bp, url_prefix='/usuarios')
-
-
 
     return app
