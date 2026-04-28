@@ -1,24 +1,24 @@
-import os
-
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
 from app import db
 from app.models.produto import Produto
-from flask_login import login_required, current_user
+from flask_login import login_required
+from .schemas import ProdutoSchema, ProdutoCreateSchema, ProdutoUpdateSchema
+from . import produtos_bp
 
-produtos_bp = Blueprint('produtos', __name__)
+produto_schema = ProdutoSchema()
+produtos_schema = ProdutoSchema(many=True)
+produto_create_schema = ProdutoCreateSchema()
+produto_update_schema = ProdutoUpdateSchema()
 
-DOCS_PATH = os.path.join(os.path.dirname(__file__), 'docs')
 
 @produtos_bp.route('/')
 def listar_produtos():
-
     produtos = Produto.query.all()
-    return jsonify(produtos)
+    return jsonify(produtos_schema.dump(produtos))
 
 
 @produtos_bp.route('/<int:id>')
 def buscar_produto(id):
-
     produto = Produto.query.get(id)
 
     if not produto:
@@ -29,41 +29,39 @@ def buscar_produto(id):
             "requested_id": id
         }), 404
 
-    return jsonify(produto), 200
+    return jsonify(produto_schema.dump(produto)), 200
 
 
 @produtos_bp.route('/', methods=['POST'])
 @login_required
 def criar_produto():
-
     dados = request.json
 
-    if not dados or 'nome' not in dados or 'preco' not in dados:
+    erros = produto_create_schema.validate(dados)
+    if erros:
         return jsonify({
             "error": "unprocessable_entity",
-            "message": "Campos 'nome' e 'preco' são obrigatórios no corpo da requisição."
+            "message": "Campos inválidos",
+            "detalhes": erros
         }), 422
 
-    try:
-        produto = Produto(
-            nome=dados['nome'],
-            preco=float(dados['preco']),
-            descricao=dados.get('descricao', '')
-        )
-        db.session.add(produto)
-        db.session.commit()
-        return jsonify(produto), 201
-    except (ValueError, TypeError):
-        return jsonify({
-            "error": "invalid_data_format",
-            "message": "O preço deve ser um número válido."
-        }), 422
+    dados_validados = produto_create_schema.load(dados)
+
+    produto = Produto(
+        nome=dados_validados['nome'],
+        preco=dados_validados['preco'],
+        descricao=dados_validados.get('descricao', ''),
+        estoque = dados_validados.get('estoque', 0)
+    )
+    db.session.add(produto)
+    db.session.commit()
+
+    return jsonify(produto_schema.dump(produto)), 201
 
 
 @produtos_bp.route('/<int:id>', methods=['PUT'])
 @login_required
 def atualizar_produto(id):
-
     dados = request.json
 
     produto = Produto.query.get(id)
@@ -76,23 +74,33 @@ def atualizar_produto(id):
             "requested_id": id
         }), 404
 
-    if not dados.get('nome') or not dados.get('preco'):
+    erros = produto_update_schema.validate(dados)
+    if erros:
         return jsonify({
-            "error": "missing_fields",
-            "message": "nome e preco sao obrigatorios"
+            "error": "invalid_data",
+            "message": "Dados inválidos",
+            "detalhes": erros
         }), 400
 
-    produto.nome = dados['nome']
-    produto.preco = dados['preco']
-    produto.descricao = dados.get('descricao', '')
+    dados_validados = produto_update_schema.load(dados)
+
+    if 'nome' in dados_validados:
+        produto.nome = dados_validados['nome']
+    if 'preco' in dados_validados:
+        produto.preco = dados_validados['preco']
+    if 'descricao' in dados_validados:
+        produto.descricao = dados_validados['descricao']
+    if 'estoque' in dados_validados:
+        produto.estoque = dados_validados['estoque']
+
     db.session.commit()
 
-    return jsonify(produto), 200
+    return jsonify(produto_schema.dump(produto)), 200
+
 
 @produtos_bp.route('/<int:id>', methods=['DELETE'])
 @login_required
 def deletar_produto(id):
-
     produto = Produto.query.get(id)
 
     if not produto:

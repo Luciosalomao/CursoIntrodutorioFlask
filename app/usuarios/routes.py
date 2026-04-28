@@ -1,26 +1,31 @@
-import os
-
-from flask import Blueprint, jsonify, request, session
+from flask import jsonify, request
 from app import db
 from app.models.usuario import Usuario
 from flask_login import login_user, logout_user, login_required, current_user
+from . import usuarios_bp
+from .schemas import (
+    UsuarioSchema, UsuarioCreateSchema, UsuarioUpdateSchema,
+    LoginSchema, UsuarioResponseSchema
+)
 
-usuarios_bp = Blueprint('usuarios', __name__)
+usuario_schema = UsuarioSchema()
+usuarios_schema = UsuarioSchema(many=True)
+usuario_create_schema = UsuarioCreateSchema()
+usuario_update_schema = UsuarioUpdateSchema()
+login_schema = LoginSchema()
+usuario_response_schema = UsuarioResponseSchema()
 
-DOCS_PATH = os.path.join(os.path.dirname(__file__), 'docs')
 
 @usuarios_bp.route('/')
 @login_required
 def listar_usuarios():
-
     usuarios = Usuario.query.all()
-    return jsonify(usuarios)
+    return jsonify(usuarios_schema.dump(usuarios))
 
 
 @usuarios_bp.route('/<int:id>')
 @login_required
 def buscar_usuario(id):
-
     usuario = Usuario.query.get(id)
 
     if not usuario:
@@ -31,43 +36,45 @@ def buscar_usuario(id):
             "requested_id": id
         }), 404
 
-    return jsonify(usuario), 200
+    return jsonify(usuario_schema.dump(usuario)), 200
 
 
 @usuarios_bp.route('/', methods=['POST'])
 def criar_usuario():
-
     dados = request.json
 
-    if not dados.get('nome') or not dados.get('email') or not dados.get('senha'):
+    erros = usuario_create_schema.validate(dados)
+    if erros:
         return jsonify({
-            "error": "missing_fields",
-            "message": "nome, email e senha sao obrigatorios"
+            "error": "invalid_data",
+            "message": "Dados inválidos",
+            "detalhes": erros
         }), 400
 
-    usuario_existente = Usuario.query.filter_by(email=dados['email']).first()
+    dados_validados = usuario_create_schema.load(dados)
+
+    usuario_existente = Usuario.query.filter_by(email=dados_validados['email']).first()
     if usuario_existente:
         return jsonify({
             "error": "duplicate_entry",
-            "message": f"Email {dados['email']} ja esta cadastrado"
+            "message": f"Email {dados_validados['email']} ja esta cadastrado"
         }), 409
 
     usuario = Usuario(
-        nome=dados['nome'],
-        email=dados['email']
+        nome=dados_validados['nome'],
+        email=dados_validados['email']
     )
-    usuario.set_senha(dados['senha'])
+    usuario.set_senha(dados_validados['senha'])
 
     db.session.add(usuario)
     db.session.commit()
 
-    return jsonify(usuario), 201
+    return jsonify(usuario_schema.dump(usuario)), 201
 
 
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
 @login_required
 def atualizar_usuario(id):
-
     dados = request.json
     usuario = Usuario.query.get(id)
 
@@ -79,36 +86,45 @@ def atualizar_usuario(id):
             "requested_id": id
         }), 404
 
-    if not dados.get('nome') and not dados.get('email') and not dados.get('senha'):
+    erros = usuario_update_schema.validate(dados)
+    if erros:
+        return jsonify({
+            "error": "invalid_data",
+            "message": "Dados inválidos",
+            "detalhes": erros
+        }), 400
+
+    dados_validados = usuario_update_schema.load(dados)
+
+    if not dados_validados:
         return jsonify({
             "error": "missing_fields",
             "message": "Pelo menos um campo (nome, email ou senha) deve ser fornecido"
         }), 400
 
-    if dados.get('email') and dados['email'] != usuario.email:
-        usuario_existente = Usuario.query.filter_by(email=dados['email']).first()
+    if 'email' in dados_validados and dados_validados['email'] != usuario.email:
+        usuario_existente = Usuario.query.filter_by(email=dados_validados['email']).first()
         if usuario_existente:
             return jsonify({
                 "error": "duplicate_entry",
-                "message": f"Email {dados['email']} ja esta cadastrado"
+                "message": f"Email {dados_validados['email']} ja esta cadastrado"
             }), 409
-        usuario.email = dados['email']
+        usuario.email = dados_validados['email']
 
-    if dados.get('nome'):
-        usuario.nome = dados['nome']
+    if 'nome' in dados_validados:
+        usuario.nome = dados_validados['nome']
 
-    if dados.get('senha'):
-        usuario.set_senha(dados['senha'])
+    if 'senha' in dados_validados:
+        usuario.set_senha(dados_validados['senha'])
 
     db.session.commit()
 
-    return jsonify(usuario), 200
+    return jsonify(usuario_schema.dump(usuario)), 200
 
 
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
 @login_required
 def deletar_usuario(id):
-
     usuario = Usuario.query.get(id)
 
     if not usuario:
@@ -127,32 +143,31 @@ def deletar_usuario(id):
 
 @usuarios_bp.route('/login', methods=['POST'])
 def login():
-
     dados = request.json
 
-    if not dados.get('email') or not dados.get('senha'):
+    erros = login_schema.validate(dados)
+    if erros:
         return jsonify({
-            "error": "missing_fields",
-            "message": "email e senha sao obrigatorios"
+            "error": "invalid_data",
+            "message": "Dados inválidos",
+            "detalhes": erros
         }), 400
 
-    usuario = Usuario.query.filter_by(email=dados['email']).first()
+    dados_validados = login_schema.load(dados)
 
-    if not usuario or not usuario.check_senha(dados['senha']):
+    usuario = Usuario.query.filter_by(email=dados_validados['email']).first()
+
+    if not usuario or not usuario.check_senha(dados_validados['senha']):
         return jsonify({
             "error": "invalid_credentials",
             "message": "Email ou senha invalidos"
         }), 401
 
-    login_user(usuario, remember=dados.get('remember', False))
+    login_user(usuario, remember=dados_validados.get('remember', False))
 
     return jsonify({
         "message": "Login realizado com sucesso",
-        "usuario": {
-            "id": usuario.id,
-            "nome": usuario.nome,
-            "email": usuario.email
-        }
+        "usuario": usuario_response_schema.dump(usuario)
     }), 200
 
 
@@ -168,9 +183,4 @@ def logout():
 @usuarios_bp.route('/me', methods=['GET'])
 @login_required
 def usuario_atual():
-
-    return jsonify({
-        "id": current_user.id,
-        "nome": current_user.nome,
-        "email": current_user.email
-    }), 200
+    return jsonify(usuario_response_schema.dump(current_user)), 200
