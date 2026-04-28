@@ -6,6 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_smorest import Api
+from app.swagger.config import SwaggerConfig
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -18,12 +19,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    app.config["API_TITLE"] = "API do Sistema de Ecommerce"
-    app.config["API_VERSION"] = "v1"
-    app.config["OPENAPI_VERSION"] = "3.1.0"
-    app.config["OPENAPI_URL_PREFIX"] = "/openapi"
-    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/docs"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    for key in dir(SwaggerConfig):
+        if not key.startswith('__'):
+            value = getattr(SwaggerConfig, key)
+            if not callable(value):
+                app.config[key] = value
 
     db.init_app(app)
     bcrypt.init_app(app)
