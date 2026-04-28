@@ -1,5 +1,5 @@
-from flask import Blueprint
+from apiflask import APIBlueprint
 
-usuarios_bp = Blueprint('usuarios', __name__)
+usuarios_bp = APIBlueprint('usuarios', __name__)
 
 from . import routes

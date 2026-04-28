@@ -1,12 +1,11 @@
-from flask import Flask, jsonify
+from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from app.config import Config
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_login import LoginManager
-from flask_smorest import Api
-from app.swagger.config import SwaggerConfig
+from apiflask import APIFlask
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -16,22 +15,14 @@ cors = CORS()
 
 
 def create_app():
-    app = Flask(__name__)
+    app = APIFlask(__name__)
     app.config.from_object(Config)
-
-    for key in dir(SwaggerConfig):
-        if not key.startswith('__'):
-            value = getattr(SwaggerConfig, key)
-            if not callable(value):
-                app.config[key] = value
 
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app)
     login_manager.init_app(app)
-
-    api = Api(app)
 
     @login_manager.unauthorized_handler
     def unauthorized():

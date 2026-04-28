@@ -14,3 +14,17 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+    # Swagger / OpenAPI
+    OPENAPI_COMPONENTS = {
+        "securitySchemes": {
+            "SessionAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "session"
+            }
+        }
+    }
+
+    OPENAPI_SECURITY = [{"SessionAuth": []}]

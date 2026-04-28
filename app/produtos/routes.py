@@ -1,115 +1,102 @@
-from flask import jsonify, request
 from app import db
 from app.models.produto import Produto
 from flask_login import login_required
 from .schemas import ProdutoSchema, ProdutoCreateSchema, ProdutoUpdateSchema
 from . import produtos_bp
 
-produto_schema = ProdutoSchema()
-produtos_schema = ProdutoSchema(many=True)
-produto_create_schema = ProdutoCreateSchema()
-produto_update_schema = ProdutoUpdateSchema()
-
-
-@produtos_bp.route('/')
+# =========================
+# LISTAR PRODUTOS
+# =========================
+@produtos_bp.get('/')
+@produtos_bp.output(ProdutoSchema(many=True))
 def listar_produtos():
-    produtos = Produto.query.all()
-    return jsonify(produtos_schema.dump(produtos))
+    return Produto.query.all()
 
 
-@produtos_bp.route('/<int:id>')
+# =========================
+# BUSCAR PRODUTO
+# =========================
+@produtos_bp.get('/<int:id>')
+@produtos_bp.output(ProdutoSchema)
 def buscar_produto(id):
     produto = Produto.query.get(id)
 
     if not produto:
-        return jsonify({
+        return {
             "error": "record_not_found",
-            "message": f"Registro com ID {id} nao encontrado",
-            "resource_type": "produto",
-            "requested_id": id
-        }), 404
+            "message": f"Registro com ID {id} nao encontrado"
+        }, 404
 
-    return jsonify(produto_schema.dump(produto)), 200
+    return produto
 
 
-@produtos_bp.route('/', methods=['POST'])
+# =========================
+# CRIAR PRODUTO
+# =========================
+@produtos_bp.post('/')
+@produtos_bp.doc(security=[{"SessionAuth": []}])
+@produtos_bp.input(ProdutoCreateSchema, arg_name="dados")
+@produtos_bp.output(ProdutoSchema, status_code=201)
 @login_required
-def criar_produto():
-    dados = request.json
-
-    erros = produto_create_schema.validate(dados)
-    if erros:
-        return jsonify({
-            "error": "unprocessable_entity",
-            "message": "Campos inválidos",
-            "detalhes": erros
-        }), 422
-
-    dados_validados = produto_create_schema.load(dados)
-
+def criar_produto(dados):
     produto = Produto(
-        nome=dados_validados['nome'],
-        preco=dados_validados['preco'],
-        descricao=dados_validados.get('descricao', ''),
-        estoque = dados_validados.get('estoque', 0)
+        nome=dados['nome'],
+        preco=dados['preco'],
+        descricao=dados.get('descricao', ''),
+        estoque=dados.get('estoque', 0)
     )
+
     db.session.add(produto)
     db.session.commit()
 
-    return jsonify(produto_schema.dump(produto)), 201
+    return produto
 
 
-@produtos_bp.route('/<int:id>', methods=['PUT'])
+# =========================
+# ATUALIZAR PRODUTO
+# =========================
+@produtos_bp.put('/<int:id>')
+@produtos_bp.doc(security=[{"SessionAuth": []}])
+@produtos_bp.input(ProdutoUpdateSchema, arg_name="dados")
+@produtos_bp.output(ProdutoSchema)
 @login_required
-def atualizar_produto(id):
-    dados = request.json
-
+def atualizar_produto(id, dados):
     produto = Produto.query.get(id)
 
     if not produto:
-        return jsonify({
+        return {
             "error": "record_not_found",
-            "message": f"Registro com ID {id} nao encontrado",
-            "resource_type": "produto",
-            "requested_id": id
-        }), 404
+            "message": f"Registro com ID {id} nao encontrado"
+        }, 404
 
-    erros = produto_update_schema.validate(dados)
-    if erros:
-        return jsonify({
-            "error": "invalid_data",
-            "message": "Dados inválidos",
-            "detalhes": erros
-        }), 400
-
-    dados_validados = produto_update_schema.load(dados)
-
-    if 'nome' in dados_validados:
-        produto.nome = dados_validados['nome']
-    if 'preco' in dados_validados:
-        produto.preco = dados_validados['preco']
-    if 'descricao' in dados_validados:
-        produto.descricao = dados_validados['descricao']
-    if 'estoque' in dados_validados:
-        produto.estoque = dados_validados['estoque']
+    if 'nome' in dados:
+        produto.nome = dados['nome']
+    if 'preco' in dados:
+        produto.preco = dados['preco']
+    if 'descricao' in dados:
+        produto.descricao = dados['descricao']
+    if 'estoque' in dados:
+        produto.estoque = dados['estoque']
 
     db.session.commit()
 
-    return jsonify(produto_schema.dump(produto)), 200
+    return produto
 
 
-@produtos_bp.route('/<int:id>', methods=['DELETE'])
+# =========================
+# DELETAR PRODUTO
+# =========================
+@produtos_bp.delete('/<int:id>')
+@produtos_bp.doc(security=[{"SessionAuth": []}])
 @login_required
 def deletar_produto(id):
     produto = Produto.query.get(id)
 
     if not produto:
-        return jsonify({
+        return {
             "error": "record_not_found",
-            "message": f"Registro com ID {id} nao encontrado",
-            "resource_type": "produto",
-            "requested_id": id
-        }), 404
+            "message": f"Registro com ID {id} nao encontrado"
+        }, 404
 
     db.session.delete(produto)
     db.session.commit()
