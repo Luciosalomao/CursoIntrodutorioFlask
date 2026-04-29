@@ -43,3 +43,29 @@ def remover_item(produto_id):
         return jsonify({'message': 'Item removido com sucesso'})
     else:
         return jsonify({'messsage': 'Falha ao remover item no carrinho'}), 400
+
+# =========================
+# LISTAR ITENS CARRINHO
+# =========================
+@carrinho_bp.get('/')
+@carrinho_bp.doc(security=[{"SessionAuth": []}])
+@login_required
+def view_carrinho():
+    usuario = Usuario.query.get(current_user.id)
+    itens_carrinho = usuario.carrinho
+    carrinho_data = []
+    for item in itens_carrinho:
+        carrinho_data.append({
+            'item_id': item.id,
+            'produto_id': item.produto.id,
+            'nome': item.produto.nome,
+            'preco': item.produto.preco,
+            'descricao': item.produto.descricao
+        })
+
+    return jsonify({
+        'nome': usuario.nome,
+        'mensagem': 'Itens no carrinho',
+        'total_itens': len(carrinho_data),
+        'itens': carrinho_data
+    })
